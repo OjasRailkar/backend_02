@@ -92,7 +92,7 @@ app.get('/students/average-score', (req, res) => {
   res.json({ averageScore: result });
 });
 
-// 5
+//5
 
 let sentence = 'The quick brown fox jumps over the lazy dog';
 
