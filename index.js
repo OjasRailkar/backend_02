@@ -248,6 +248,26 @@ app.get('/subscriptions/update', (req, res) => {
   res.json(result);
 });
 
+
+
+let cart = [
+  { productId: 1, name: 'Laptop', price: 50000, quantity: 1 },
+  { productId: 2, name: 'Mobile', price: 20000, quantity: 2 },
+];
+
+function calculateTotalPrice(cart){
+  let totalPrice = 0;
+  for( let i of cart){
+    totalPrice += i.quantity * i.price
+  }
+  return totalPrice;
+}
+
+app.get('/cart/total-price', (req, res) => {
+  let result = calculateTotalPrice(cart);
+  res.json({ totalPrice: result });
+});
+
 app.listen(port, () => {
   console.log(`Example app listening at http://localhost:${port}`);
 });
