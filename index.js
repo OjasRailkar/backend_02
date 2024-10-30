@@ -4,116 +4,123 @@ let cors = require("cors")
 const app = express();
 app.use(cors());
 
-// Data
-let tasks = [
-  { taskId: 1, text: 'Fix bug #101', priority: 2 },
-  { taskId: 2, text: 'Implement feature #202', priority: 1 },
-  { taskId: 3, text: 'Write documentation', priority: 3 }
+// data
+let activities = [
+  { activityId: 1, type: 'Running', duration: 30, caloriesBurned: 300 },
+  { activityId: 2, type: 'Swimming', duration: 45, caloriesBurned: 400 },
+  { activityId: 3, type: 'Cycling', duration: 60, caloriesBurned: 500 }
 ];
-//****************************************************************** */
+//************************************************************************************* */
 
-// Endpoint 1. Add a Task to the Task List
-function addToTasks(tasks, taskId, text, priority) {
-  let task = {
-    taskId: taskId,
-    text: text,
-    priority: priority
+// Endpoint 1: Add an Activity
+function addActivity(activityId, type, duration, caloriesBurned ){
+  let activity = {
+    activityId : activityId,
+    type : type,
+    duration: duration,
+    caloriesBurned : caloriesBurned
   }
-  tasks.push(task);
-  return tasks
+
+  activities.push(activity)
+  return activities
 }
 
+app.get('/activities/add', (req, res) => {
+  let activityId = parseInt(req.query.activityId)
+  let duration = parseInt(req.query.duration)
+  let caloriesBurned = parseInt(req.query.caloriesBurned)
+  let type = req.query.type
 
-app.get('/tasks/add', (req, res) => {
-  let taskId = parseInt(req.query.taskId)
-  let text = req.query.text
-  let priority = parseInt(req.query.priority)
-
-  let result = addToTasks(tasks, taskId, text, priority)
-  res.json({ tasks: result })
+  let result = addActivity(activityId, type, duration, caloriesBurned)
+  res.json({ activities : result})
 })
 
-// Endpoint 2. Read All Tasks in the Task List
-function readTasks(tasks) {
-  return tasks
+// Endpoint 2: Sort Activities by Duration
+function sortActivitiesByDuration(activity1, activity2){
+  return activity1.duration - activity2.duration
 }
 
-app.get('/tasks', (req, res) => {
-  let result = readTasks(tasks)
-  res.json({ tasks: result })
+app.get('/activities/sort-by-duration', (req,res) =>{
+  let activitiesCopy = activities.slice()
+  let result = activitiesCopy.sort(sortActivitiesByDuration)
+  res.json({ activities : result})
 })
 
-// Endpoint 3. Sort Tasks by Priority
-function sortTasksByPriority(task1, task2) {
-  return task1.priority - task2.priority
+//Endpoint 3: Filter Activities by Type
+function filterByType(activities, type){
+  return activities.filter( activity => activity.type === type)
+}
+app.get('/activities/filter-by-type', (req,res) => {
+  let type = req.query.type
+  let result = filterByType(activities, type)
+  res.json({activities : result}) 
+})
+
+// Endpoint 4: Calculate Total Calories Burned
+function sumOfCalories(activities){
+  let totalCalories = 0
+  for(let i = 0; i < activities.length; i++){
+    totalCalories += activities[i].caloriesBurned
+  }
+  return totalCalories;
 }
 
-app.get('/tasks/sort-by-priority', (req, res) => {
-  let tasksCopy = tasks.slice()
-  let result = tasksCopy.sort(sortTasksByPriority)
-  res.json({ tasks: result })
+app.get('/activities/total-calories', (req,res) => {
+  let result = sumOfCalories(activities)
+  res.json({totalCaloriesBurned : result}) 
 })
 
-// Endpoint 4. Edit Task Priority
-function updateTaskByPriority(tasks, taskId, priority) {
-  for (let i = 0; i < tasks.length; i++) {
-    if (tasks[i].taskId === taskId) {
-      tasks[i].priority = priority
+
+//Endpoint 5: Update Activity Duration by ID
+
+function updateActivityDuration(activities, activityId, duration){
+  for(let i = 0; i < activities.length; i++){
+    if(activities[i].activityId === activityId){
+      activities[i].duration = duration
     }
   }
-  return tasks
+  return activities
 }
 
-app.get('/tasks/edit-priority', (req, res) => {
-  let taskId = parseInt(req.query.taskId)
-  let priority = parseInt(req.query.priority)
+app.get('/activities/update-duration', (req, res) => {
+  let activityId = parseInt(req.query.activityId)
+  let duration = parseInt(req.query.duration)
 
-  let result = updateTaskByPriority(tasks, taskId, priority)
-  res.json({ tasks: result })
+  let result = updateActivityDuration(activities, activityId, duration)
+  res.json({ activities : result})
 })
 
-//  Endpoint 5. Edit/Update Task Text
-function updateTaskByText(tasks, taskId, text) {
-  for (let i = 0; i < tasks.length; i++) {
-    if (tasks[i].taskId === taskId) {
-      tasks[i].text = text
-    }
-  }
-  return tasks
+// Endpoint 6: Delete Activity by ID
+function deleteActivity(activities, activityId ) {
+  return activities.filter(activity => activity.activityId != activityId)
 }
 
-app.get('/tasks/edit-text', (req, res) => {
-  let taskId = parseInt(req.query.taskId)
-  let text = req.query.text
-
-  let result = updateTaskByText(tasks, taskId, text)
-  res.json({ tasks: result })
+app.get('/activities/delete', (req, res) => {
+  let activityId = parseInt(req.query.activityId)
+  let result = deleteActivity(activities, activityId )
+  res.json({ activities : result})
 })
 
-//Endpoint 6. Delete a Task from the Task List
-function deleteTask(tasks, taskId){
-  return tasks.filter( task => task.taskId !== taskId)
+// Endpoint 7: Delete Activities by Type
+function deleteActivityByType(activities, type) {
+  return activities.filter(activity => activity.type != type)
 }
 
-app.get('/tasks/delete', (req, res) => {
-  let taskId = parseInt(req.query.taskId)
-
-  let result = deleteTask(tasks, taskId)
-  res.json({ tasks: result })
+app.get('/activities/delete-by-type', (req, res) => {
+  let type = req.query.type
+  let result = deleteActivityByType(activities, type)
+  res.json({ activities : result})
 })
 
-// Endpoint 7. Filter Tasks by Priority
 
-function filterTaskByPriority(tasks, priority){
-  return tasks.filter( task => task.priority === priority)
-}
 
-app.get('/tasks/filter-by-priority', (req, res) => {
-  let priority = parseInt(req.query.priority)
 
-  let result = filterTaskByPriority(tasks, priority)
-  res.json({ tasks : result})
-})
+
+
+
+
+
+
 
 
 
